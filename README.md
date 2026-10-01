@@ -1,0 +1,462 @@
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import webbrowser
+
+HTML = r'''
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Axion Beta 0.1.1</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:white;
+    color:#202124;
+}
+
+#signup{
+    position:fixed;
+    inset:0;
+    background:#f8f9fa;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.signupbox{
+    width:90%;
+    max-width:400px;
+    background:white;
+    padding:35px;
+    border:1px solid #ddd;
+    border-radius:18px;
+    text-align:center;
+}
+
+.signupbox h1{
+    font-size:42px;
+    margin:5px;
+}
+
+.signupbox p{
+    color:#5f6368;
+}
+
+input{
+    width:100%;
+    padding:15px;
+    margin:8px 0;
+    border:1px solid #dfe1e5;
+    border-radius:8px;
+    font-size:16px;
+}
+
+button{
+    padding:12px 22px;
+    border:1px solid #dadce0;
+    border-radius:5px;
+    background:#f8f9fa;
+    font-size:15px;
+    cursor:pointer;
+}
+
+.blue{
+    background:#1a73e8;
+    color:white;
+    border:0;
+}
+
+#browser{
+    display:none;
+    min-height:100vh;
+}
+
+nav{
+    height:60px;
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    gap:20px;
+    padding:0 20px;
+    font-size:14px;
+}
+
+.navlink{
+    cursor:pointer;
+}
+
+.account{
+    background:#1a73e8;
+    color:white;
+    padding:10px 16px;
+    border-radius:20px;
+}
+
+.home{
+    text-align:center;
+    padding-top:120px;
+}
+
+.logo{
+    font-size:68px;
+    font-weight:bold;
+    letter-spacing:-4px;
+    margin-bottom:35px;
+}
+
+.logo span{
+    color:#4285f4;
+}
+
+.searchbox{
+    width:90%;
+    max-width:600px;
+    height:50px;
+    margin:auto;
+    border:1px solid #dfe1e5;
+    border-radius:28px;
+    display:flex;
+    align-items:center;
+    padding:0 15px;
+    box-shadow:0 1px 4px #ddd;
+}
+
+.searchbox input{
+    border:0;
+    outline:0;
+    margin:0;
+    box-shadow:none;
+    font-size:17px;
+}
+
+.searchbtns{
+    margin-top:25px;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+}
+
+.footer{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    padding:15px;
+    background:#f2f2f2;
+    color:#666;
+    text-align:center;
+    font-size:13px;
+}
+
+/* ABOUT WINDOW */
+
+#about{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    align-items:center;
+    justify-content:center;
+}
+
+.aboutbox{
+    width:88%;
+    max-width:420px;
+    background:white;
+    border-radius:20px;
+    padding:30px;
+    text-align:center;
+    box-shadow:0 5px 30px #333;
+}
+
+.aboutbox h2{
+    font-size:30px;
+    margin-top:0;
+}
+
+.aboutbox p{
+    font-size:17px;
+    line-height:1.6;
+}
+
+.close{
+    background:#1a73e8;
+    color:white;
+    border:0;
+    width:100%;
+    margin-top:10px;
+}
+
+@media(max-width:500px){
+    .logo{
+        font-size:55px;
+    }
+
+    .home{
+        padding-top:100px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIGN UP -->
+
+<div id="signup">
+
+<div class="signupbox">
+
+<h1>⚡ Axion</h1>
+
+<p>Axion Beta 0.1.1</p>
+<p>Create your Axion account</p>
+
+<input id="username" placeholder="Username">
+
+<input id="password"
+       type="password"
+       placeholder="Password">
+
+<button class="blue" onclick="signup()">
+SIGN UP
+</button>
+
+<p id="msg"></p>
+
+</div>
+
+</div>
+
+
+<!-- BROWSER -->
+
+<div id="browser">
+
+<nav>
+
+<span class="navlink" onclick="showAbout()">
+About
+</span>
+
+<span>Axion Apps</span>
+
+<span class="account" id="account"></span>
+
+</nav>
+
+
+<div class="home">
+
+<div class="logo">
+<span>Axion</span>
+</div>
+
+<div class="searchbox">
+
+<span>🔍</span>
+
+<input id="search"
+placeholder="Search Axion or enter a URL"
+onkeydown="enter(event)">
+
+</div>
+
+<div class="searchbtns">
+
+<button onclick="search()">
+Axion Search
+</button>
+
+<button onclick="lucky()">
+I'm Feeling Lucky
+</button>
+
+</div>
+
+<p style="margin-top:30px;color:#666">
+Welcome to Axion Beta 0.1.1
+</p>
+
+</div>
+
+
+<div class="footer">
+Axion Beta 0.1.1 • Your simple web browser
+</div>
+
+</div>
+
+
+<!-- ABOUT -->
+
+<div id="about">
+
+<div class="aboutbox">
+
+<h2>⚡ About Axion</h2>
+
+<p>
+<b>Axion Beta 0.1.1</b>
+</p>
+
+<p>
+<b>Developer:</b><br>
+Aarush Mishra
+</p>
+
+<p>
+<b>Main-use software:</b><br>
+ChatGPT<br>
+Pydroid 3
+</p>
+
+<p>
+Axion is a personal web-browser prototype.
+</p>
+
+<button class="close" onclick="closeAbout()">
+CLOSE
+</button>
+
+</div>
+
+</div>
+
+
+<script>
+
+function signup(){
+
+    let user =
+    document.getElementById("username").value.trim();
+
+    let pass =
+    document.getElementById("password").value;
+
+    if(user=="" || pass==""){
+
+        document.getElementById("msg").textContent =
+        "Please enter a username and password.";
+
+        return;
+    }
+
+    localStorage.setItem("axionUser",user);
+
+    document.getElementById("signup").style.display="none";
+    document.getElementById("browser").style.display="block";
+
+    document.getElementById("account").textContent=user;
+}
+
+
+function showAbout(){
+
+    document.getElementById("about").style.display="flex";
+
+}
+
+
+function closeAbout(){
+
+    document.getElementById("about").style.display="none";
+
+}
+
+
+function search(){
+
+    let q =
+    document.getElementById("search").value.trim();
+
+    if(q=="") return;
+
+    let url;
+
+    if(q.startsWith("http://") ||
+       q.startsWith("https://")){
+
+        url=q;
+
+    }else if(q.includes(".") &&
+             !q.includes(" ")){
+
+        url="https://"+q;
+
+    }else{
+
+        url=
+        "https://www.google.com/search?q="+
+        encodeURIComponent(q);
+    }
+
+    window.open(url,"_blank");
+}
+
+
+function lucky(){
+
+    let q =
+    document.getElementById("search").value.trim();
+
+    if(q=="") return;
+
+    window.open(
+        "https://www.google.com/search?q="+
+        encodeURIComponent(q),
+        "_blank"
+    );
+}
+
+
+function enter(e){
+
+    if(e.key==="Enter"){
+        search();
+    }
+
+}
+
+</script>
+
+</body>
+</html>
+'''
+
+
+class Handler(BaseHTTPRequestHandler):
+
+    def do_GET(self):
+
+        self.send_response(200)
+
+        self.send_header(
+            "Content-Type",
+            "text/html; charset=utf-8"
+        )
+
+        self.end_headers()
+
+        self.wfile.write(
+            HTML.encode("utf-8")
+        )
+
+
+server = HTTPServer(
+    ("127.0.0.1",8080),
+    Handler
+)
+
+print("⚡ Axion Beta 0.1.1")
+print("Starting Axion...")
+
+webbrowser.open(
+    "http://127.0.0.1:8080"
+)
+
+server.serve_forever()
